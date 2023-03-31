@@ -1,0 +1,13 @@
+Depois de criar o objeto socket, você pode usar seus métodos para se comunicar com o 
+servidor Socket.io e receber mensagens do servidor em tempo real. Por exemplo, você pode
+ usar o método socket.emit() para enviar uma mensagem do cliente para o servidor, ou o método 
+ socket.on() para ouvir uma mensagem do servidor enviado para o cliente.
+ -----------------------------------------------------------------
+ --------------------------------31-03-23-----------------------------------------
+ -------------------------------------------------------------------------------
+ Não é recomendado excluir o arquivo index.html, pois ele é necessário para 
+ carregar a página web em um navegador e para vincular os arquivos JavaScript
+  e CSS ao HTML. O arquivo client.js é importado no index.html e pode ser excluído
+   se não for mais necessário, mas é importante verificar se ele não é usado em 
+   nenhum outro lugar do código. Se o client.js é usado em outras partes do código,
+    então você deve alterar o caminho da importação para o novo local do arquivo.
