@@ -1,7 +1,6 @@
 //Importa o módulo 'http' do Node.js e cria um novo servidor HTTP.
 const server = require('http').createServer();
-//Importa o módulo 'os-utils', que fornece informações de uso do sistema operacional.
-const os = require('os-utils');
+
 //Importa o módulo 'socket.io' e o utiliza para criar uma instância de Socket.IO no servidor HTTP 
 //criado anteriormente. Este trecho também especifica que as opções de transporte 
 //devem ser 'websocket' e 'polling'.
@@ -9,25 +8,48 @@ const io = require('socket.io')(server, {
   transports: ['websocket', 'polling']
 });
 
-let tick = 0;
 // 1. escuta conexões de soquete
 //Cria um evento que é executado toda vez que um novo cliente se conecta ao servidor 
 //Socket.IO. O parâmetro 'client' contém uma referência ao objeto do cliente que acabou de se conectar.
 io.on('connection', client => {
-  //Cria um temporizador que executa uma função a cada 1 segundo.
-  setInterval(() => {
-    // 2. a cada segundo, emite um evento 'cpu' para o usuário
-    os.cpuUsage(cpuPercent => {
-      //Emite um evento para o cliente com o nome 'cpu' contendo um objeto
-      // que possui duas propriedades: 'name' e 'value'. A propriedade 'name' é um 
-      //contador que é incrementado a cada emissão de evento, e a propriedade 'value' 
-      //é a porcentagem de uso da CPU obtida anteriormente.
-      client.emit('cpu', {
-        name: tick++,
-        value: cpuPercent
-      });
+  console.log('Cliente conectado:', client.id);
+  //intervalId = null;
+  const Binance = require('binance-api-node').default;
+  const binanceClient = Binance();
+
+  let intervalId;
+
+  client.on('subscribeToTicker', ({ symbol, interval }) => {
+    // ...
+    let timeoutId;
+    const updateInterval = 5000; // Defina o intervalo de atualização em milissegundos
+    const getPriceData = () => {
+      binanceClient.candles({ symbol: symbol, interval: interval })
+        .then(candles => {
+          console.log(candles);
+          let data = candles.map(candle => ({ x: candle.closeTime, y: candle.close }));
+          client.emit('price', data);
+        })
+        .catch(error => {
+          console.error('Erro ao obter candles', error);
+        })
+        .finally(() => {
+          timeoutId = setTimeout(getPriceData, updateInterval);
+        });
+    };
+    getPriceData(); // Inicializa a chamada da função getPriceData
+    client.on('disconnect', () => {
+      clearTimeout(timeoutId); // Limpa o timeout para evitar execuções desnecessárias
+      console.log('Cliente desconectado:', client.id);
     });
-  }, 1000);
+  });
+  
+
+  client.on('disconnect', () => {
+    console.log('Cliente desconectado:', client.id);
+  });
+
 });
+
 
 server.listen(3000);

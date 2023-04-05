@@ -11,3 +11,94 @@ servidor Socket.io e receber mensagens do servidor em tempo real. Por exemplo, v
    se não for mais necessário, mas é importante verificar se ele não é usado em 
    nenhum outro lugar do código. Se o client.js é usado em outras partes do código,
     então você deve alterar o caminho da importação para o novo local do arquivo.
+    -----------------------------------------------------------------------------------
+    -----------------------------------------------------------------------------------------
+    -------------------------------------03-04-23------------------------------------------
+    ----------------------------------------------------------------------------------------
+    --------------------------------------------------------------------------------------------
+    Se o setInterval não está sendo chamado, pode ser que o evento subscribeToTicker não esteja 
+    sendo acionado pelo cliente. Verifique se o cliente está emitindo o evento corretamente,
+     com os parâmetros symbol e interval corretos. Caso contrário, o setInterval nunca será chamado.
+
+Se o evento está sendo emitido corretamente, tente aumentar o intervalo do setInterval para ver 
+se a função é executada. Por exemplo, em vez de passar interval, passe 5000 (5 segundos) e veja
+ se o console.log é exibido. Se for, o problema pode estar no tempo de resposta da Binance API
+  ou no uso do sistema operacional.
+
+Outra opção é verificar se há algum erro na saída do console, que possa estar impedindo que a 
+função seja executada. Certifique-se de que não há nenhum erro sendo gerado pelo código ou pela 
+API da Binance.
+-------------------------------------------------------------------------------------
+------------------------------21:30------------------------------------------------------
+-----------------------------------------------------------------------------------------
+Para plotar o gráfico em tempo real, você precisará de um mecanismo para receber as atualizações do preço e do símbolo, e em seguida, inserir essas atualizações no gráfico. Você pode criar um novo estado no componente App para armazenar o preço e o símbolo, e depois passá-los para a série que renderiza o gráfico.
+
+Assumindo que você tenha um mecanismo para receber atualizações do preço e do símbolo, você pode adicionar os seguintes trechos de código ao componente App:
+
+javascript
+Copy code
+const [symbol, setSymbol] = useState('BTC-USD');
+const [price, setPrice] = useState(0);
+
+useEffect(() => {
+  // código para receber atualizações de preço e símbolo
+  // e definir o valor do estado de preço com o último preço recebido
+}, [symbol]);
+
+// O código abaixo define um intervalo que atualiza a série com os dados de preço.
+// Isso deve ser colocado no useEffect que lida com as atualizações de preço.
+
+const series = useRef(null);
+
+useEffect(() => {
+  const interval = setInterval(() => {
+    const currentDate = new Date();
+    const data = {
+      time: currentDate.getTime() / 1000,
+      close: price,
+      open: price,
+      high: price,
+      low: price,
+    };
+    series.current.update(data);
+  }, 1000);
+
+  return () => clearInterval(interval);
+}, [price]);
+Em seguida, você pode passar o estado symbol para a série que renderiza o gráfico, como este:
+
+javascript
+Copy code
+<CandlestickSeries
+  ref={series}
+  symbol={symbol}
+/>
+Com estas mudanças no código, você poderá atualizar o gráfico com base em novos preços
+ que você recebe, e você poderá mudar o símbolo que é mostrado no gráfico ao atualizar 
+ o estado symbol.
+ --------------------------------------------------------------------
+ -----------------------------------------------------------------------------------------
+ ------------------------------ 05-04-23 -------------------------------------------------
+ -------------------------------------------------------------------------------------------
+ ----------------------------------------------------------------------------------------------
+ Este código é um exemplo de um aplicativo React que se comunica com um servidor através do 
+ socket.io-client para obter dados de preços e exibir gráficos em tempo real.
+
+O aplicativo possui dois componentes: RealTimeCpuUsage e App.
+
+O componente RealTimeCpuUsage é apenas um título e não faz nada relacionado à comunicação com 
+o servidor.
+
+O componente App é onde a comunicação com o servidor ocorre. Ele usa o useEffect hook para se 
+inscrever em um canal do servidor usando o método subscribeToTicker. Quando os dados são recebidos
+ do servidor, eles são armazenados em um estado usando o useState hook.
+
+O componente App também contém dois select boxes para permitir que o usuário selecione o símbolo 
+e o intervalo de tempo desejados para o gráfico. Quando o usuário seleciona uma opção diferente, 
+o estado é atualizado, forçando uma nova solicitação de dados do servidor. O gráfico é exibido 
+usando o componente ApexChart, que é passado com os dados mais recentes, a chave do gráfico e o 
+status de atualização.
+
+Além disso, há uma configuração inicial do socket.io-client para se conectar ao servidor
+ em http://localhost:3000 usando os protocolos de transporte WebSocket e polling. O aplicativo 
+ também imprime mensagens no console quando a conexão com o servidor é estabelecida ou desconectada.
