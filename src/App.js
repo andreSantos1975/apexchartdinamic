@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
+import Candle from './Candle';
 import ApexChart from './Chart';
+import { mapCandleData } from './utils';
+
 
 const socket = io('http://localhost:3000', {
   transports: ['websocket', 'polling']
@@ -47,6 +50,13 @@ const RealTimeCpuUsage = () => {
     setInterval(event.target.value);
     setUpdate(!update); // adicionado para forçar atualização
   }
+
+  useEffect(() => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
+  }, [symbol, interval, update]);
 
   return (
     <div>

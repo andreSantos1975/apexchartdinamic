@@ -1,6 +1,5 @@
 
-
-
+const cors = require('cors');
 
 //Importa o módulo 'http' do Node.js e cria um novo servidor HTTP.
 const server = require('http').createServer();
@@ -9,13 +8,14 @@ const server = require('http').createServer();
 //criado anteriormente. Este trecho também especifica que as opções de transporte 
 //devem ser 'websocket' e 'polling'.
 const io = require('socket.io')(server, {
-  transports: ['websocket', 'polling']
+  transports: ['websocket', 'polling'],
+  cors: {
+    origin: 'http://localhost:3000'
+  }
 });
 
-const cors = require('cors');
 
-// adiciona o middleware cors ao servidor
-io.use(cors());
+
 // 1. escuta conexões de soquete
 //Cria um evento que é executado toda vez que um novo cliente se conecta ao servidor 
 //Socket.IO. O parâmetro 'client' contém uma referência ao objeto do cliente que acabou de se conectar.
@@ -24,8 +24,6 @@ io.on('connection', client => {
   //intervalId = null;
   const Binance = require('binance-api-node').default;
   const binanceClient = Binance();
-
-
 
   client.on('subscribeToTicker', ({ symbol, interval }) => {
 
