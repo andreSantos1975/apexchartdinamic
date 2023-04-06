@@ -17,12 +17,12 @@ io.on('connection', client => {
   const Binance = require('binance-api-node').default;
   const binanceClient = Binance();
 
-  let intervalId;
+ 
 
   client.on('subscribeToTicker', ({ symbol, interval }) => {
     // ...
     let timeoutId;
-    const updateInterval = 5000; // Defina o intervalo de atualização em milissegundos
+    const updateInterval = 3000; // Defina o intervalo de atualização em milissegundos
     const getPriceData = () => {
       binanceClient.candles({ symbol: symbol, interval: interval })
         .then(candles => {
