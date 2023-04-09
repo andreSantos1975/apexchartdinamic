@@ -28,7 +28,10 @@ const RealTimeCpuUsage = () => {
   useEffect(() => {
     socket.on('price', priceData => {
       console.log('Recebido evento preço do servidor:', priceData);
-      setData(currentData => [...currentData, priceData]);
+      setData(currentData => [...currentData, ...mapCandleData(priceData)]);
+
+      const data =  mapCandleData(priceData);
+      console.log('App data:',data);
     });
   }, []);
 
@@ -43,13 +46,16 @@ const RealTimeCpuUsage = () => {
 
   function onSymbolChange(event) {
     setSymbol(event.target.value);
+    console.log('Novo valor de symbol:', event.target.value);
     setUpdate(!update); // atualiza 'update' para forçar atualização
   }
-
+  
   function onIntervalChange(event) {
     setInterval(event.target.value);
+    console.log('Novo valor de interval:', event.target.value);
     setUpdate(!update); // adicionado para forçar atualização
   }
+  
 
   useEffect(() => {
     setIsLoading(true);

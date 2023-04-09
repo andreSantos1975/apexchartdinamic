@@ -64,18 +64,19 @@ class ApexChart extends React.Component {
     };
   }
 
-
-
   render() {
+    console.log('Dados do gráfico:', this.props.data);
+  
     return (
-
       <div id="chart">
-      {this.props.data.length > 0 && (
-        <ReactApexChart options={this.state.options} series={this.state.series} type="candlestick" height={350} />
-      )}
-    </div>
+        {this.props.data.length > 0 && (
+          <ReactApexChart options={this.state.options} series={this.state.series} type="candlestick" height={350} />
+        )}
+      </div>
     );
   }
+  
 }
+
 
 export default ApexChart;

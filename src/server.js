@@ -1,4 +1,6 @@
 
+
+
 const cors = require('cors');
 
 //Importa o módulo 'http' do Node.js e cria um novo servidor HTTP.
@@ -30,19 +32,19 @@ io.on('connection', client => {
     let timeoutId;
     const updateInterval = 3000; // Defina o intervalo de atualização em milissegundos
     const getPriceData = () => {
-      binanceClient.candles({ symbol: symbol, interval: interval })
-        .then(candles => {
-          console.log(candles);
-          let data = candles.map(candle => ({ x: candle.closeTime, y: candle.close }));
-          client.emit('price', data);
-        })
-        .catch(error => {
-          console.error('Erro ao obter candles', error);
-        })
-        .finally(() => {
-          timeoutId = setTimeout(getPriceData, updateInterval);
-        });
+      binanceClient.candles({ symbol: symbol.toUpperCase(), interval: interval, limit: 60 })
+      .then(candles => {
+        console.log('Candles Servidor:', candles);
+        client.emit('price', candles);
+      })
+      .catch(error => {
+        console.error('Erro ao obter candles', error);
+      })
+      .finally(() => {
+        timeoutId = setTimeout(getPriceData, updateInterval);
+      });
     };
+    
     getPriceData(); // Inicializa a chamada da função getPriceData
     client.on('disconnect', () => {
       clearTimeout(timeoutId); // Limpa o timeout para evitar execuções desnecessárias
