@@ -12,9 +12,11 @@ class ApexChart extends React.Component {
 
       series: [{
         name: 'candle',
-        data: props.data && props.data.length > 0 ? props.data : []
+        data: props.data 
       }],
+      
       options: {
+        
         chart: {
           height: 350,
           type: 'candlestick',
@@ -24,6 +26,7 @@ class ApexChart extends React.Component {
           align: 'left'
         },
         annotations: {
+          
           xaxis: [
             {
               x: 'Oct 06 14:00',
@@ -51,11 +54,13 @@ class ApexChart extends React.Component {
             formatter: function (val) {
               return dayjs(val).format('MMM DD HH:mm')
             }
-          }
+          },
+          minBarWidth: 10
         },
         yaxis: {
           tooltip: {
-            enabled: true
+            enabled: true,
+           
           }
         }
       },

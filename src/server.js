@@ -12,7 +12,7 @@ const server = require('http').createServer();
 const io = require('socket.io')(server, {
   transports: ['websocket', 'polling'],
   cors: {
-    origin: 'http://localhost:3000'
+    origin: ['http://localhost:3000', 'http://localhost:3001']
   }
 });
 
@@ -33,17 +33,20 @@ io.on('connection', client => {
     const updateInterval = 3000; // Defina o intervalo de atualização em milissegundos
     const getPriceData = () => {
       binanceClient.candles({ symbol: symbol.toUpperCase(), interval: interval, limit: 60 })
-      .then(candles => {
-        console.log('Candles Servidor:', candles);
-        client.emit('price', candles);
-      })
-      .catch(error => {
-        console.error('Erro ao obter candles', error);
-      })
-      .finally(() => {
-        timeoutId = setTimeout(getPriceData, updateInterval);
-      });
+        .then(candles => {
+          console.log('Candles Servidor:', candles);
+          const candlesArray = candles.map(candle => [candle.openTime, candle.open, candle.high, candle.low, candle.close, candle.volume]);
+          console.log('Candles Array Servidor');
+          client.emit('price', candlesArray);
+        })
+        .catch(error => {
+          console.error('Erro ao obter candles', error);
+        })
+        .finally(() => {
+          timeoutId = setTimeout(getPriceData, updateInterval);
+        });
     };
+    
     
     getPriceData(); // Inicializa a chamada da função getPriceData
     client.on('disconnect', () => {
