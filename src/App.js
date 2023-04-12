@@ -27,28 +27,31 @@ function App() {
   }, [symbol, interval, update]);
   
 
- const { lastJsonMessage } = useWebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_${interval}`, {
-  onOpen: () => console.log('Connected to Binance'),
-  onError: (err) => console.err(err),
-  shouldReconnect: true,
-  reconnectInterval: 3000,
-  onMessage: () => {
-    if(lastJsonMessage) {
-      console.log('Received websocket new message:', lastJsonMessage); // Registrar log aqui
-      const newCandle = new Candle(lastJsonMessage.k.t, lastJsonMessage.k.o, lastJsonMessage.k.h, lastJsonMessage.k.l, lastJsonMessage.k.c)
-      const newData = [...data];
-
-      if(lastJsonMessage.k.x === false) {
-        newData[newData.length -1] = newCandle
+  const options = {
+    onOpen: () => console.log('Connected to Binance'),
+    onError: (err) => console.error(err),
+    shouldReconnect: () => true,
+    reconnectInterval: 3000,
+    onMessage: (event) => {
+      const message = JSON.parse(event.data);
+      console.log('Received message:', message);
+      if (message.k) {
+        const newCandle = new Candle(message.k.t, message.k.o, message.k.h, message.k.l, message.k.c);
+        console.log('newCandle',newCandle);
+        const newData = [...data];
+        if (message.k.x === false) {
+          newData[newData.length - 1] = newCandle;
+        } else {
+          newData.splice(0, 1);
+          newData.push(newCandle);
+        }
+        setData(newData);
       }
-      else {
-       newData.splice(0, 1);
-       newData.push(newCandle);
-      }
-      setData(newData);
     }
-  }
- })
+  };
+  
+  const { lastJsonMessage } = useWebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_${interval}`, options);
+  
 
 
   function onSymbolChange(event) {

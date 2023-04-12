@@ -451,3 +451,81 @@ em vez de um array de arrays como a API da Binance espera para o endpoint /api/v
  em vez de um array de arrays, as velas podem ser comprimidas, porque o código que mapeia os 
  dados do servidor para as velas espera um array de arrays. Se o servidor enviar um array de 
  objetos em vez disso, o código precisará ser atualizado para lidar com esse formato de dados.
+ -------------------------------------------------------------------------------------------O problema pode estar no fato de que a alteração do estado data não está disparando uma atualização imediata do gráfico. É possível resolver isso de algumas maneiras, mas uma solução seria criar um estado adicional para controlar a atualização do gráfico, e alterá-lo sempre que o estado data for atualizado. Isso deve forçar o gráfico a atualizar.
+
+Para fazer isso, você pode adicionar um novo estado, por exemplo chartUpdate, e usá-lo como uma chave para o componente ApexChart. Você pode alterar chartUpdate sempre que data for atualizado. Ficaria assim:
+
+typescript
+Copy code
+function App() {
+  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [symbol, setSymbol] = useState('BTCUSDT');
+  const [interval, setInterval] = useState('1m');
+  const [chartUpdate, setChartUpdate] = useState(false); // novo estado para forçar atualização do gráfico
+
+  useEffect(() => {
+    getCandle(symbol, interval)
+      .then(data => {
+        setData(data);
+        setIsLoading(false);
+        console.log('Data returned:', data);
+        setChartUpdate(!chartUpdate); // atualiza o estado chartUpdate para forçar atualização do gráfico
+      })
+      .catch(err => {
+        setIsLoading(false);
+        alert(err.response ? err.response.data : err.message);
+      });
+  }, [symbol, interval]);
+
+  const options = {
+    onOpen: () => console.log('Connected to Binance'),
+    onError: (err) => console.error(err),
+    shouldReconnect: () => true,
+    reconnectInterval: 3000,
+    onMessage: (event) => {
+      const message = JSON.parse(event.data);
+      console.log('Received message:', message);
+      if (message.k) {
+        const newCandle = new Candle(message.k.t, message.k.o, message.k.h, message.k.l, message.k.c);
+        console.log('newCandle',newCandle);
+        const newData = [...data];
+        if (message.k.x === false) {
+          newData[newData.length - 1] = newCandle;
+        } else {
+          newData.splice(0, 1);
+          newData.push(newCandle);
+        }
+        setData(newData);
+        setChartUpdate(!chartUpdate); // atualiza o estado chartUpdate para forçar atualização do gráfico
+      }
+    }
+  };
+
+  const { lastJsonMessage } = useWebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_${interval}`, options);
+
+  function onSymbolChange(event) {
+    setSymbol(event.target.value);
+  }
+
+  function onIntervalChange(event) {
+    setInterval(event.target.value);
+  }
+
+  return (
+    <div className="App">
+      <select onChange={onSymbolChange} value={symbol}>
+        <option value="BTCUSDT">BTCUSDT</option>
+        <option value="ETHUSDT">ETHUSDT</option>
+        <option value="ADAUSDT">ADAUSDT</option>
+      </select>
+
+      <select onChange={onIntervalChange} value={interval}>
+        <option value="1m">1m</option>
+        <option value="1d">1d</option>
+        <option value="1w">1w</option>
+      </select>
+
+      {!isLoading && <ApexChart data={data} key={`${symbol}-${interval}`} chartUpdate={chartUpdate} />}
+      {isLoading && <p>Loading...</p>}
+    </div>
