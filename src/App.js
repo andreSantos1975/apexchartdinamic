@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { getCandle } from './utils';
+import Candle from './Candle';
+import useWebSocket from 'react-use-websocket';
 import './App.css';
 import ApexChart from './Chart';
+//import { useWebSocket } from 'react-use-websocket/dist/lib/use-websocket';
 
 function App() {
   const [data, setData] = useState([]);
@@ -24,7 +27,28 @@ function App() {
   }, [symbol, interval, update]);
   
 
+ const { lastJsonMessage } = useWebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_${interval}`, {
+  onOpen: () => console.log('Connected to Binance'),
+  onError: (err) => console.err(err),
+  shouldReconnect: true,
+  reconnectInterval: 3000,
+  onMessage: () => {
+    if(lastJsonMessage) {
+      console.log('Received websocket new message:', lastJsonMessage); // Registrar log aqui
+      const newCandle = new Candle(lastJsonMessage.k.t, lastJsonMessage.k.o, lastJsonMessage.k.h, lastJsonMessage.k.l, lastJsonMessage.k.c)
+      const newData = [...data];
 
+      if(lastJsonMessage.k.x === false) {
+        newData[newData.length -1] = newCandle
+      }
+      else {
+       newData.splice(0, 1);
+       newData.push(newCandle);
+      }
+      setData(newData);
+    }
+  }
+ })
 
 
   function onSymbolChange(event) {

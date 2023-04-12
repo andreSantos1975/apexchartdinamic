@@ -16,11 +16,9 @@ export function getCandle(symbol, interval) {
   return new Promise((resolve, reject) => {
     socket.emit('subscribeToTicker', { symbol, interval });
     socket.on('price', candleData => {
-      console.log('Utils candleData:', candleData);
       const candles = candleData.map(candleArr => {
         return new Candle(candleArr[0], candleArr[1], candleArr[2], candleArr[3], candleArr[4]);
       });
-      console.log('candle formatado do utils:', candles);
       resolve(candles);
     });
     socket.on('error', error => {

@@ -34,10 +34,9 @@ io.on('connection', client => {
     const getPriceData = () => {
       binanceClient.candles({ symbol: symbol.toUpperCase(), interval: interval, limit: 60 })
         .then(candles => {
-          console.log('Candles Servidor:', candles);
           const candlesArray = candles.map(candle => [candle.openTime, candle.open, candle.high, candle.low, candle.close, candle.volume]);
-          console.log('Candles Array Servidor');
           client.emit('price', candlesArray);
+          console.log('CandlesArray Server',candlesArray)
         })
         .catch(error => {
           console.error('Erro ao obter candles', error);
@@ -46,8 +45,8 @@ io.on('connection', client => {
           timeoutId = setTimeout(getPriceData, updateInterval);
         });
     };
-    
-    
+
+
     getPriceData(); // Inicializa a chamada da função getPriceData
     client.on('disconnect', () => {
       clearTimeout(timeoutId); // Limpa o timeout para evitar execuções desnecessárias
