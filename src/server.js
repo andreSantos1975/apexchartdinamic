@@ -30,7 +30,7 @@ io.on('connection', client => {
   client.on('subscribeToTicker', ({ symbol, interval }) => {
 
     let timeoutId;
-    const updateInterval = 3000; // Defina o intervalo de atualização em milissegundos
+    const updateInterval = 6000; // Defina o intervalo de atualização em milissegundos
     const getPriceData = () => {
       binanceClient.candles({ symbol: symbol.toUpperCase(), interval: interval, limit: 60 })
         .then(candles => {

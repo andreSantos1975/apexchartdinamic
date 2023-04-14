@@ -7,6 +7,7 @@ function ApexChart(props) {
 
   useEffect(() => {
     setSeries([{ name: 'candle', data: props.data }]);
+    console.log("Novos dados recebidos no ApexChart:", props.data);
   }, [props.data]);
 
   const options = {
@@ -55,6 +56,8 @@ function ApexChart(props) {
       }
     }
   };
+
+  console.log("Dados usados no gráfico:", series);
 
   return (
     <div id="chart">

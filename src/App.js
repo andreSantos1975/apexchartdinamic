@@ -1,88 +1,99 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer } from 'react';
 import { getCandle } from './utils';
-import Candle from './Candle';
-import useWebSocket from 'react-use-websocket';
+//import useWebSocket from 'react-use-websocket';
 import './App.css';
 import ApexChart from './Chart';
-//import { useWebSocket } from 'react-use-websocket/dist/lib/use-websocket';
+
+const initialState = {
+  data: [],
+  isLoading: true,
+  symbol: 'BTCUSDT',
+  interval: '1m',
+  update: 0,
+  maxCandles: 60,
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'SET_DATA':
+      return { ...state, data: action.payload, isLoading: false };
+    case 'SET_SYMBOL':
+      return { ...state, symbol: action.payload, update: !state.update };
+    case 'SET_INTERVAL':
+      return { ...state, interval: action.payload, update: !state.update };
+    case 'SET_MAX_CANDLES':
+      return { ...state, maxCandles: action.payload };
+    default:
+      return state;
+  }
+}
 
 function App() {
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [symbol, setSymbol] = useState('BTCUSDT');
-  const [interval, setInterval] = useState('1m');
-  const [update, setUpdate] = useState(0); // novo estado para forçar atualização
-
+  const [state, dispatch] = useReducer(reducer, initialState);
+console.log('Hello App')
   useEffect(() => {
-    getCandle(symbol, interval)
-      .then(data => {
-        setData(data);
-        setIsLoading(false);
-        console.log('Data returned:', data); // adicionar o log aqui
-      })
-      .catch(err => {
-        setIsLoading(false);
-        alert(err.response ? err.response.data : err.message);
-      });
-  }, [symbol, interval, update]);
+    const intervalId = setInterval(() => {
+      getCandle(state.symbol, state.interval)
+        .then((candles) => {
+          console.log('Testando candle do App', candles)
+          if (candles.length > state.maxCandles) {
+            candles.splice(0, candles.length - state.maxCandles);
+          }
+          console.log('Testando candle do App2:', candles);
+          dispatch({ type: 'SET_DATA', payload: candles });
+        })
+        .catch((error) => {
+          console.error('Erro ao obter candles', error);
+        })
+        .finally(() => {
+          console.log('Promise finalizada');
+        });
+    }, 6000);
+  
+    return () => clearInterval(intervalId);
+  }, [state.symbol, state.interval]);
   
 
-  const options = {
-    onOpen: () => console.log('Connected to Binance'),
-    onError: (err) => console.error(err),
-    shouldReconnect: () => true,
-    reconnectInterval: 3000,
-    onMessage: (event) => {
-      const message = JSON.parse(event.data);
-      console.log('Received message:', message);
-      if (message.k) {
-        const newCandle = new Candle(message.k.t, message.k.o, message.k.h, message.k.l, message.k.c);
-        console.log('newCandle',newCandle);
-        const newData = [...data];
-        if (message.k.x === false) {
-          newData[newData.length - 1] = newCandle;
-        } else {
-          newData.splice(0, 1);
-          newData.push(newCandle);
-        }
-        setData(newData);
-      }
-    }
-  };
-  
-  const { lastJsonMessage } = useWebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}@kline_${interval}`, options);
-  
 
+ 
 
   function onSymbolChange(event) {
-    setSymbol(event.target.value);
-    setUpdate(!update); // atualiza 'update' para forçar atualização
+    dispatch({ type: 'SET_SYMBOL', payload: event.target.value });
   }
 
   function onIntervalChange(event) {
-    setInterval(event.target.value);
-    setUpdate(!update); // adicionado para forçar atualização
+    dispatch({ type: 'SET_INTERVAL', payload: event.target.value });
   }
 
 
   return (
     <div className="App">
-      <select onChange={onSymbolChange} value={symbol}>
+      <select onChange={onSymbolChange} value={state.symbol}>
         <option value="BTCUSDT">BTCUSDT</option>
         <option value="ETHUSDT">ETHUSDT</option>
         <option value="ADAUSDT">ADAUSDT</option>
       </select>
-
-      <select onChange={onIntervalChange} value={interval}>
+  
+      <select onChange={onIntervalChange} value={state.interval}>
         <option value="1m">1m</option>
         <option value="1d">1d</option>
         <option value="1w">1w</option>
       </select>
-
-      {!isLoading && <ApexChart data={data} key={`${symbol}-${interval}-${update}`} />}
-      {isLoading && <p>Loading...</p>}
+  
+      {!state.isLoading && (
+        <>
+          <p>Data atual do App: {state.data.timestamp}</p>
+          <ApexChart
+            data={state.data}
+            key={`${state.symbol}-${state.interval}-${state.update}`}
+          />
+        </>
+      )}
+      {state.isLoading && <p>Loading...</p>}
     </div>
   );
+  
 }
+
 
 export default App;

@@ -19,6 +19,7 @@ export function getCandle(symbol, interval) {
       const candles = candleData.map(candleArr => {
         return new Candle(candleArr[0], candleArr[1], candleArr[2], candleArr[3], candleArr[4]);
       });
+      console.log('candles', candles)
       resolve(candles);
     });
     socket.on('error', error => {
